@@ -10,13 +10,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Post {
-  id          String @id @default(auto()) @map("_id") @db.ObjectId
-  title       String
-  content     String
-  description String
-}
-
 model Page {
   id          String @id @default(auto()) @map("_id") @db.ObjectId
   title       String
@@ -24,12 +17,24 @@ model Page {
   description String
 }
 
-model Category {
-  id          String  @id @default(auto()) @map("_id") @db.ObjectId
+model Post {
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
   title       String
-  slug        String  @unique
+  slug        String     @unique
+  content     String
+  description String
+  categoryIds String[]   @db.ObjectId
+  categories  Category[] @relation(fields: [categoryIds], references: [id])
+}
+
+model Category {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  slug        String   @unique
   content     String?
   description String?
+  postIds     String[] @db.ObjectId
+  posts       Post[]   @relation(fields: [postIds], references: [id])
 }
 
 model User {

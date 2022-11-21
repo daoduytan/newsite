@@ -1,4 +1,5 @@
 import { DashboardLayout, DashboardLayoutContent } from "@/components/layout";
+import { PostList } from "@/components/pages";
 import Link from "next/link";
 
 export default function PostsPage() {
@@ -8,7 +9,7 @@ export default function PostsPage() {
         title="Posts page"
         extra={<Link href="posts/new">New Page</Link>}
       >
-        <div>Postspage content</div>
+        <PostList />
       </DashboardLayoutContent>
     </DashboardLayout>
   );

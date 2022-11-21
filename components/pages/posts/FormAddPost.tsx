@@ -8,30 +8,69 @@ import {
   VStack,
   Box,
   FormErrorMessage,
+  useToast,
+  Select,
 } from "@chakra-ui/react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { useMutation } from "@tanstack/react-query";
+import { fetcher } from "@/lib/fetcher";
+import { useCategories } from "@/hooks/category.hooks";
+import { slugify } from "@/helps/slugify";
 
 const schema = z.object({
   title: z.string().min(1, { message: "Title is Required" }),
   content: z.string(),
   description: z.string(),
-  categtory_ids: z.string(),
+  categoryIds: z.array(z.string()),
+  // slug: z.string()
 });
 
-type FormAddPostData = z.infer<typeof schema>;
+export type AddPostData = z.infer<typeof schema>;
+
+const requestAddPost = (data: AddPostData) =>
+  fetcher.post("/dashboard/post", data);
 
 export function FormAddPost() {
+  const toast = useToast();
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
-  } = useForm<FormAddPostData>({
+  } = useForm<AddPostData>({
     resolver: zodResolver(schema),
   });
 
-  const onSubmit = handleSubmit((data) => {});
+  const { data: categoriesData } = useCategories();
+
+  const mutation = useMutation({
+    mutationFn: requestAddPost,
+    onSuccess: async (dataResponse) => {
+      console.log({dataResponse})
+      // queryClient.setQueryData(["user"], dataResponse);
+      toast({
+        status: "success",
+        title: "Add post Success",
+      });
+      reset();
+    },
+    onError() {
+      toast({
+        status: "error",
+        title: "Add post Failure",
+      });
+    },
+  });
+
+  const onSubmit = handleSubmit((data) => {
+    console.log({ data });
+    const slug = slugify(data.title)
+    mutation.mutate({...data});
+  });
+
+  console.log({errors})
 
   return (
     <VStack
@@ -69,8 +108,21 @@ export function FormAddPost() {
         />
       </FormControl>
 
+      <FormControl>
+        <FormLabel>Categories</FormLabel>
+        <select {...register("categoryIds")} placeholder="Select Category" multiple>
+          {categoriesData?.map((i) => (
+            <option key={i.id} value={i.id}>
+              {i.title}
+            </option>
+          ))}
+        </select>
+      </FormControl>
+
       <Box>
-        <Button type="submit">Add post</Button>
+        <Button isLoading={mutation.isLoading} type="submit">
+          Add post
+        </Button>
       </Box>
     </VStack>
   );
