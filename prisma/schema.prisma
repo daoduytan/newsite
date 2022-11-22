@@ -12,6 +12,7 @@ datasource db {
 
 model Page {
   id          String @id @default(auto()) @map("_id") @db.ObjectId
+  slug        String @unique
   title       String
   content     String
   description String
@@ -24,6 +25,8 @@ model Post {
   content     String
   description String
   categoryIds String[]   @db.ObjectId
+  draft       Boolean?
+  deleted     Boolean?
   categories  Category[] @relation(fields: [categoryIds], references: [id])
 }
 

@@ -1,12 +1,14 @@
 import { fetcher } from "@/lib/fetcher";
 import { ResponseData } from "@/types/response";
-import { Post } from "@prisma/client";
+import { Category, Post } from "@prisma/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/router";
 
+export type PostResponse = Post & { categories: Category[] };
+
 const requestPosts = () =>
   fetcher
-    .get<ResponseData<Post[]>>("/dashboard/posts")
+    .get<ResponseData<PostResponse[]>>("/dashboard/posts")
     .then((res) => res.data.data);
 
 export function usePosts() {
@@ -25,15 +27,14 @@ const requestPost = (postId?: string) =>
 export function usePost() {
   const queryClient = useQueryClient();
   const router = useRouter();
-  const postId = router.query.id;
+  const postId = router.query.id as string | undefined;
 
   return useQuery({
-    queryKey: ["posts", postId?.toString()],
-    queryFn: () => requestPost(postId?.toString()),
-    enable: !!postId,
+    queryKey: ["posts", { postId }],
+    queryFn: () => requestPost(postId),
+    // enable: !!postId,
     initialData: () =>
-      queryClient
-        .getQueryData(["posts"])
-        ?.find((item: Post) => item.id === postId),
+      queryClient.getQueryData(["posts"]) ||
+      [].find((item: Post) => item.id === postId),
   });
 }

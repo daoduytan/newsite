@@ -1,38 +1,53 @@
 "use client";
-import {
-  Input,
-  FormControl,
-  FormLabel,
-  Button,
-  Textarea,
-  VStack,
-  Box,
-  FormErrorMessage,
-  useToast,
-  Select,
-} from "@chakra-ui/react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { useMutation } from "@tanstack/react-query";
-import { fetcher } from "@/lib/fetcher";
-import { useCategories } from "@/hooks/category.hooks";
 import { slugify } from "@/helps/slugify";
+import { useCategories } from "@/hooks/category.hooks";
+import { PostResponse } from "@/hooks/post.hooks";
+import { fetcher } from "@/lib/fetcher";
+import { ResponseData } from "@/types/response";
+import {
+  Box,
+  Button,
+  FormControl,
+  FormErrorMessage,
+  FormLabel,
+  Input,
+  Textarea,
+  useToast,
+  VStack,
+} from "@chakra-ui/react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { pick } from "lodash";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
 
 const schema = z.object({
   title: z.string().min(1, { message: "Title is Required" }),
   content: z.string(),
   description: z.string(),
   categoryIds: z.array(z.string()),
-  // slug: z.string()
 });
 
 export type AddPostData = z.infer<typeof schema>;
 
 const requestAddPost = (data: AddPostData) =>
-  fetcher.post("/dashboard/post", data);
+  fetcher
+    .post<ResponseData<PostResponse>>("/dashboard/post", data)
+    .then((res) => res.data.data);
 
-export function FormAddPost() {
+type PostUpdateData = AddPostData & { id: string };
+
+const requestUpdatePost = ({ id, ...rest }: PostUpdateData) =>
+  fetcher
+    .put<ResponseData<PostResponse>>(`/dashboard/post/${id}`, { ...rest })
+    .then((res) => res.data.data);
+
+interface Props {
+  post?: PostResponse;
+}
+
+export function FormPost({ post }: Props) {
+  const queryClient = useQueryClient();
   const toast = useToast();
   const {
     register,
@@ -41,15 +56,19 @@ export function FormAddPost() {
     formState: { errors },
   } = useForm<AddPostData>({
     resolver: zodResolver(schema),
+    defaultValues: pick(post, [
+      "title",
+      "content",
+      "description",
+      "categoryIds",
+    ]),
   });
 
   const { data: categoriesData } = useCategories();
 
-  const mutation = useMutation({
+  const mutationAddPost = useMutation({
     mutationFn: requestAddPost,
-    onSuccess: async (dataResponse) => {
-      console.log({dataResponse})
-      // queryClient.setQueryData(["user"], dataResponse);
+    onSuccess: async (dataResponse: any) => {
       toast({
         status: "success",
         title: "Add post Success",
@@ -64,13 +83,33 @@ export function FormAddPost() {
     },
   });
 
-  const onSubmit = handleSubmit((data) => {
-    console.log({ data });
-    const slug = slugify(data.title)
-    mutation.mutate({...data});
+  const mutationUpdatePost = useMutation({
+    mutationFn: requestUpdatePost,
+    onSuccess: async (dataResponse) => {
+      queryClient.setQueryData(["posts", { postId: post?.id }], dataResponse);
+      toast({
+        status: "success",
+        title: "Update post Success",
+      });
+    },
+    onError() {
+      toast({
+        status: "error",
+        title: "Update post Failure",
+      });
+    },
   });
 
-  console.log({errors})
+  const onSubmit = handleSubmit((data) => {
+    console.log({ data });
+    if (!!post) {
+      mutationUpdatePost.mutate({ ...data, id: post.id });
+    } else {
+      mutationAddPost.mutate(data);
+    }
+  });
+
+  console.log({ errors });
 
   return (
     <VStack
@@ -110,7 +149,11 @@ export function FormAddPost() {
 
       <FormControl>
         <FormLabel>Categories</FormLabel>
-        <select {...register("categoryIds")} placeholder="Select Category" multiple>
+        <select
+          {...register("categoryIds")}
+          placeholder="Select Category"
+          multiple
+        >
           {categoriesData?.map((i) => (
             <option key={i.id} value={i.id}>
               {i.title}
@@ -120,8 +163,11 @@ export function FormAddPost() {
       </FormControl>
 
       <Box>
-        <Button isLoading={mutation.isLoading} type="submit">
-          Add post
+        <Button
+          isLoading={mutationAddPost.isLoading || mutationUpdatePost.isLoading}
+          type="submit"
+        >
+          {!!post ? "Update post" : "Add post"}
         </Button>
       </Box>
     </VStack>

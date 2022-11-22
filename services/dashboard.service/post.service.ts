@@ -6,10 +6,10 @@ function addPost(data: AddPostData) {
   const slug = slugify(data.title);
 
   return prisma.post.createMany({
-      data: {
-        ...data,
-        slug,
-      }, 
+    data: {
+      ...data,
+      slug,
+    },
   });
 }
 
@@ -18,25 +18,41 @@ function getAllPostService() {
     include: {
       categories: {
         select: {
-          id:true,
-          title:true,
-          slug:true,
+          id: true,
+          title: true,
+          slug: true,
 
-          posts :{
+          posts: {
             select: {
               id: true,
-              title:true,
-              slug: true   
-            }
-          }
+              title: true,
+              slug: true,
+            },
+          },
         },
-       
-      }
-    }
+      },
+    },
+  });
+}
+
+function getPostDetailService(postId: string) {
+  return prisma.post.findFirst({
+    where: {
+      id: postId,
+    },
+  });
+}
+
+function updatePostService(postId: string, data: any) {
+  return prisma.post.update({
+    where: { id: postId },
+    data,
   });
 }
 
 export const postService = {
   all: getAllPostService,
   add: addPost,
+  get: getPostDetailService,
+  update: updatePostService,
 };

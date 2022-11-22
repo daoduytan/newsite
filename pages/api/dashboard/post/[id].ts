@@ -1,22 +1,22 @@
-import { categoryService } from "@/services/dashboard.service";
+import { postService } from "@/services/dashboard.service";
 import type { ResponseData } from "@/types/response";
-import type { Category } from "@prisma/client";
+import type { Post } from "@prisma/client";
 import { StatusCodes } from "http-status-codes";
 import type { NextApiRequest, NextApiResponse } from "next";
 
-async function categoryRoute(
+async function postRoute(
   req: NextApiRequest,
-  res: NextApiResponse<ResponseData<Category | null>>
+  res: NextApiResponse<ResponseData<Post | null>>
 ) {
   const { method, query } = req;
 
   switch (method) {
     case "GET":
       try {
-        const category = await categoryService.get(query.id as string);
+        const post = await postService.get(query.id as string);
 
         res.status(StatusCodes.OK).json({
-          data: category,
+          data: post,
           status: true,
         });
       } catch (error) {
@@ -32,17 +32,16 @@ async function categoryRoute(
       break;
 
     case "PUT":
+      console.log("dadadad");
       try {
-        const category = await categoryService.update(
-          query.id as string,
-          req.body
-        );
+        const post = await postService.update(query.id as string, req.body);
 
         res.status(StatusCodes.OK).json({
-          data: category,
+          data: post,
           status: true,
         });
       } catch (error) {
+        console.log({ error });
         res.status(StatusCodes.BAD_REQUEST).json({
           error: {
             message: (error as Error).message,
@@ -54,4 +53,4 @@ async function categoryRoute(
   }
 }
 
-export default categoryRoute;
+export default postRoute;
