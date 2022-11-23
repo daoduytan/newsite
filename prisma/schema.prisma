@@ -11,11 +11,12 @@ datasource db {
 }
 
 model Page {
-  id          String @id @default(auto()) @map("_id") @db.ObjectId
-  slug        String @unique
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  slug        String   @unique
   title       String
   content     String
   description String
+  Option      Option[]
 }
 
 model Post {
@@ -24,9 +25,9 @@ model Post {
   slug        String     @unique
   content     String
   description String
-  categoryIds String[]   @db.ObjectId
   draft       Boolean?
   deleted     Boolean?
+  categoryIds String[]   @db.ObjectId
   categories  Category[] @relation(fields: [categoryIds], references: [id])
 }
 
@@ -38,6 +39,25 @@ model Category {
   description String?
   postIds     String[] @db.ObjectId
   posts       Post[]   @relation(fields: [postIds], references: [id])
+  Option      Option[]
+}
+
+model Option {
+  id         String     @id @default(auto()) @map("_id") @db.ObjectId
+  title      String
+  type       OptionType
+  pageId     String?    @db.ObjectId
+  page       Page?      @relation(fields: [pageId], references: [id])
+  categoryId String?    @db.ObjectId
+  category   Category?  @relation(fields: [categoryId], references: [id])
+}
+
+enum OptionType {
+  Text
+  List
+  Paragraph
+  Image
+  Gallery
 }
 
 model User {
@@ -45,4 +65,11 @@ model User {
   username String  @unique
   password String
   name     String?
+}
+
+model Setting {
+  id          String  @id @default(auto()) @map("_id") @db.ObjectId
+  title       String?
+  description String?
+  logo        String?
 }

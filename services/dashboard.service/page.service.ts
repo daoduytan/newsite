@@ -5,7 +5,7 @@ function getAllPageService() {
   return prisma.page.findMany({});
 }
 
-function addPageService(data) {
+function addPageService(data: any) {
   const slug = slugify(data.title);
 
   return prisma.page.create({
