@@ -1,3 +1,4 @@
+import { Editor } from "@/components/ui";
 import { fetcher } from "@/lib/fetcher";
 import {
   Box,
@@ -11,7 +12,6 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Category } from "@prisma/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/router";
 import { useForm } from "react-hook-form";
@@ -57,6 +57,8 @@ export function FormEditCategory() {
   const {
     formState: { errors },
     register,
+    watch,
+    setValue,
     reset,
     handleSubmit,
   } = useForm<FormEditCategoryData>({
@@ -64,10 +66,15 @@ export function FormEditCategory() {
     defaultValues: queryClient.getQueryData(["categories", router.query.id]),
   });
 
+  const handleChangeContent = (value?: string) => {
+    setValue("content", value || "");
+  };
+
   const onSubmit = handleSubmit((data) => {
     mutation.mutate(data);
-    console.log({ data });
   });
+
+  const content = watch("content");
 
   return (
     <VStack
@@ -91,8 +98,7 @@ export function FormEditCategory() {
 
       <FormControl isInvalid={!!errors?.content}>
         <FormLabel htmlFor="content">Content</FormLabel>
-        <Textarea {...register("content")} placeholder="Type title category" />
-        <FormErrorMessage>{errors?.content?.message}</FormErrorMessage>
+        <Editor value={content} onChange={handleChangeContent} />
       </FormControl>
 
       <FormControl isInvalid={!!errors?.description}>

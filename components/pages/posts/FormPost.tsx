@@ -1,5 +1,5 @@
 "use client";
-import { slugify } from "@/helps/slugify";
+import { Editor } from "@/components/ui/editor";
 import { useCategories } from "@/hooks/category.hooks";
 import { PostResponse } from "@/hooks/post.hooks";
 import { fetcher } from "@/lib/fetcher";
@@ -53,6 +53,8 @@ export function FormPost({ post }: Props) {
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors },
   } = useForm<AddPostData>({
     resolver: zodResolver(schema),
@@ -100,8 +102,11 @@ export function FormPost({ post }: Props) {
     },
   });
 
+  const handleChangeContent = (value?: string) => {
+    setValue("content", value);
+  };
+
   const onSubmit = handleSubmit((data) => {
-    console.log({ data });
     if (!!post) {
       mutationUpdatePost.mutate({ ...data, id: post.id });
     } else {
@@ -109,7 +114,7 @@ export function FormPost({ post }: Props) {
     }
   });
 
-  console.log({ errors });
+  const content = watch("content");
 
   return (
     <VStack
@@ -131,11 +136,7 @@ export function FormPost({ post }: Props) {
 
       <FormControl>
         <FormLabel htmlFor="content">Content</FormLabel>
-        <Textarea
-          {...register("content")}
-          name="content"
-          placeholder="Type description post here"
-        />
+        <Editor value={content} onChange={handleChangeContent} />
       </FormControl>
 
       <FormControl>

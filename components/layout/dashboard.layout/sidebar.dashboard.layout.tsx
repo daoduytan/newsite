@@ -17,6 +17,11 @@ const menus: Array<{ label: string; href: string; icon: ReactElement }> = [
     icon: <Squares2X2Icon />,
   },
   {
+    label: "Images",
+    href: "/dashboard/images",
+    icon: <NewspaperIcon />,
+  },
+  {
     label: "Posts",
     href: "/dashboard/posts",
     icon: <NewspaperIcon />,
@@ -34,6 +39,16 @@ const menus: Array<{ label: string; href: string; icon: ReactElement }> = [
   {
     label: "Settings",
     href: "/dashboard/settings",
+    icon: <Cog6ToothIcon />,
+  },
+  {
+    label: "Menus",
+    href: "/dashboard/menu",
+    icon: <Cog6ToothIcon />,
+  },
+  {
+    label: "Options",
+    href: "/dashboard/options",
     icon: <Cog6ToothIcon />,
   },
 ];
